@@ -49,7 +49,7 @@ class SnapHound:
 		# Database connection
 		self.conn = DatabaseManager(json.loads(os.getenv("FULL_DB_INFO")))
 		self._newly_indexed = Queue()
-		load_model()
+		self.model, self.processor = load_model()
 		# Start indexing
 		self.__index_images()
 
@@ -121,9 +121,9 @@ class SnapHound:
 			print(f"processing... {img_path}")
 			image = Image.open(img_path).convert("RGB")
 			# Convert image to embedding
-			inputs = processor(images=image, return_tensors="pt")
+			inputs = self.processor(images=image, return_tensors="pt")
 			with torch.no_grad():
-				img_embedding = model.get_image_features(**inputs)
+				img_embedding = self.model.get_image_features(**inputs)
 			
 			# Normalize embedding
 			img_embedding = img_embedding / img_embedding.norm(dim=-1, keepdim=True)
@@ -201,9 +201,9 @@ class SnapHound:
 		if not index:
 			return [], []
 			
-		inputs = processor(text=[query], return_tensors="pt")
+		inputs = self.processor(text=[query], return_tensors="pt")
 		with torch.no_grad():
-			text_embedding = model.get_text_features(**inputs)
+			text_embedding = self.model.get_text_features(**inputs)
 		
 		text_embedding = text_embedding / text_embedding.norm(dim=-1, keepdim=True)
 		text_embedding = text_embedding.numpy().astype("float32")
@@ -220,10 +220,10 @@ class SnapHound:
 			return []
 			
 		image = Image.open(query_image_path).convert("RGB")
-		inputs = processor(images=image, return_tensors="pt")
+		inputs = self.processor(images=image, return_tensors="pt")
 		
 		with torch.no_grad():
-			query_embedding = model.get_image_features(**inputs)
+			query_embedding = self.model.get_image_features(**inputs)
 			
 		query_embedding = query_embedding / query_embedding.norm(dim=-1, keepdim=True)
 		query_np = query_embedding.squeeze().numpy().astype("float32")

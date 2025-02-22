@@ -5,15 +5,14 @@ setup(
 	version="0.1.0",
 	packages=find_packages(exclude=["tests*"]),
 	install_requires=[
-		"SentencePiece",
-		"pymediainfo",
-		"python-dotenv",
-		"transformers",
-		"torch",
-		"pillow",
-		"numpy",
-		"faiss-cpu",
-		"protobuf"
+		"sentencepiece==0.2.0",
+		"python-dotenv==1.0.1",
+		"transformers==4.49.0",
+		"torch==2.6.0",
+		"pillow==11.1.0",
+		"numpy==2.2.3",
+		"faiss-cpu==1.10.0",
+		"protobuf==5.29.3"
 	],
 	author="Jebin Einstein",
 	description="Search through images and videos using AI",
@@ -24,5 +23,5 @@ setup(
 		"Programming Language :: Python :: 3",
 		"Operating System :: OS Independent",
 	],
-	python_requires=">=3.7",
+	python_requires=">=3.8",
 )
