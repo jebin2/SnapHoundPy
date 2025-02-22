@@ -1,4 +1,4 @@
-from .model import model, processor
+from .model import load_model
 import os
 from PIL import Image
 import numpy as np
@@ -6,7 +6,6 @@ import faiss
 import torch
 from .db_processor import DatabaseManager
 import pickle
-import threading
 from queue import Queue
 from typing import Optional, List, Tuple, Set
 import glob
@@ -50,6 +49,7 @@ class SnapHound:
 		# Database connection
 		self.conn = DatabaseManager(json.loads(os.getenv("FULL_DB_INFO")))
 		self._newly_indexed = Queue()
+		load_model()
 		# Start indexing
 		self.__index_images()
 
