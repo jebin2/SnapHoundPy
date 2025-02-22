@@ -1,7 +1,7 @@
 from transformers import AutoProcessor, AutoModel
 
 model_name = "google/siglip-so400m-patch14-384"
-save_path = "/home/jebineinstein/git/imagesearch"
+save_path = "./snaphoundpy/model_files/"
 
 print(f"Downloading model: {model_name}")
 
