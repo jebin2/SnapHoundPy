@@ -41,16 +41,18 @@ class PathParser:
 		return expanded_paths
 
 class SnapHound:
-	FULL_DB_INFO='''{
-		"DATABASE": "./snaphoundpy/snaphound.db",
-		"BACKUP_DATABASE": "./snaphoundpy/snaphound.db.bak",
+	PACKAGE_DIR = os.path.dirname(os.path.abspath(__file__))
+	FULL_DB_INFO = f'''{{
+		"DATABASE": "{PACKAGE_DIR}/snaphound.db",
+		"BACKUP_DATABASE": "{PACKAGE_DIR}/snaphound.db.bak",
 		"TABLE_NAME": "snaphound",
-		"COLUMNS": {
-			"id": {"index": 0, "name": "id", "type": "integer"},
-			"image_path": {"index": 1, "name": "image_path", "type": "text"},
-			"embedding": {"index": 2, "name": "embedding", "type": "BLOB"}
-		}
-	}'''
+		"COLUMNS": {{
+			"id": {{"index": 0, "name": "id", "type": "integer"}},
+			"image_path": {{"index": 1, "name": "image_path", "type": "text"}},
+			"embedding": {{"index": 2, "name": "embedding", "type": "BLOB"}}
+		}}
+	}}'''
+
 	def __init__(self, paths: List[str] = [], priority_paths: List[str] = [], exclude_paths: List[str] = []):
 		load_dotenv()
 
