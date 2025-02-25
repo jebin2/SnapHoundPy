@@ -64,17 +64,17 @@ class SnapHound:
 		}}
 	}}'''
 
-	def __init__(self, paths: List[str] = [], priority_paths: List[str] = [], exclude_paths: List[str] = []):
+	def __init__(self, paths: List[str] = [], priority_paths: List[str] = [], exclude_paths: List[str] = [], index=True):
 		load_dotenv()
 
 		self.__process_path(paths, priority_paths, exclude_paths)
 		
 		# Database connection
 		self.conn = DatabaseManager(json.loads(self.FULL_DB_INFO))
-		self._newly_indexed = Queue()
 		self.model, self.processor = load_model()
 		# Start indexing
-		self.__index_images()
+		if index:
+			self.__index_images()
 
 	def _is_excluded(self, path: str) -> bool:
 		"""Check if a path should be excluded based on exclude_paths."""
@@ -157,7 +157,6 @@ class SnapHound:
 			
 			# Store in DB and notify search functions
 			self.__store_embedding(img_path, embedding_np)
-			self._newly_indexed.put((img_path, embedding_np))
 
 			print(f"processed {img_path}")
 
@@ -184,7 +183,6 @@ class SnapHound:
 	def __load_embeddings(self) -> Tuple[np.ndarray, List[str]]:
 		"""Loads embeddings from the database and includes any newly indexed items."""
 		# Get all stored embeddings
-		self._newly_indexed = Queue()
 		data = self.conn.execute(f"SELECT image_path, embedding FROM {self.conn.table_name}")
 		
 		# Convert to lists for easier manipulation
@@ -198,13 +196,6 @@ class SnapHound:
 				continue
 			image_vectors.append(pickle.loads(emb_blob))
 			image_paths.append(path)
-		
-		# Add any newly indexed items not yet in DB
-		while not self._newly_indexed.empty():
-			path, embedding = self._newly_indexed.get()
-			if path not in image_paths and not self._is_excluded(path):
-				image_vectors.append(embedding)
-				image_paths.append(path)
 		
 		return np.array(image_vectors, dtype="float32"), image_paths
 
@@ -238,7 +229,6 @@ class SnapHound:
 		distances, indices = index.search(text_embedding, min(top_k, len(image_paths)))
 		result = [image_paths[i] for i in indices[0]]
 		print(f"""{{
-			"still_indexing": {len(self._newly_indexed) != 0}
 			"searched_result":{result}
 		}}""")
 		return result
@@ -261,7 +251,6 @@ class SnapHound:
 		distances, indices = index.search(np.array([query_np]), min(top_k, len(image_paths)))
 		result = [image_paths[i] for i in indices[0]]
 		print(f"""{{
-			"still_indexing": {len(self._newly_indexed) != 0}
 			"searched_result":{result}
 		}}""")
 		return result
