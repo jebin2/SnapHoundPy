@@ -223,10 +223,9 @@ class SnapHound:
 
 	def search_with_text(self, query: str, top_k: int = 5) -> Tuple[List[str], List[float]]:
 		"""Search images using text query."""
-		print("sdsdfdsfxcvxc")
 		index, image_paths = self.__build_faiss()
 		if not index:
-			print("Not Indexed yet")
+			print("Not Indexed yet.")
 			return [], []
 			
 		inputs = self.processor(text=[query], return_tensors="pt")
@@ -238,7 +237,10 @@ class SnapHound:
 		
 		distances, indices = index.search(text_embedding, min(top_k, len(image_paths)))
 		result = [image_paths[i] for i in indices[0]]
-		print(result)
+		print(f"""{{
+			"still_indexing": {len(self._newly_indexed) != 0}
+			"searched_result":{result}
+		}}""")
 		return result
 
 	def search_with_image(self, query_image_path: str, top_k: int = 5) -> List[str]:
@@ -258,5 +260,8 @@ class SnapHound:
 		
 		distances, indices = index.search(np.array([query_np]), min(top_k, len(image_paths)))
 		result = [image_paths[i] for i in indices[0]]
-		print(result)
+		print(f"""{{
+			"still_indexing": {len(self._newly_indexed) != 0}
+			"searched_result":{result}
+		}}""")
 		return result
