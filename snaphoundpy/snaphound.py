@@ -41,13 +41,23 @@ class PathParser:
 		return expanded_paths
 
 class SnapHound:
+	FULL_DB_INFO='''{
+		"DATABASE": "./snaphoundpy/snaphound.db",
+		"BACKUP_DATABASE": "./snaphoundpy/snaphound.db.bak",
+		"TABLE_NAME": "snaphound",
+		"COLUMNS": {
+			"id": {"index": 0, "name": "id", "type": "integer"},
+			"image_path": {"index": 1, "name": "image_path", "type": "text"},
+			"embedding": {"index": 2, "name": "embedding", "type": "BLOB"}
+		}
+	}'''
 	def __init__(self, paths: List[str] = [], priority_paths: List[str] = [], exclude_paths: List[str] = []):
 		load_dotenv()
 
 		self.__process_path(paths, priority_paths, exclude_paths)
 		
 		# Database connection
-		self.conn = DatabaseManager(json.loads(os.getenv("FULL_DB_INFO")))
+		self.conn = DatabaseManager(json.loads(self.FULL_DB_INFO))
 		self._newly_indexed = Queue()
 		self.model, self.processor = load_model()
 		# Start indexing
@@ -77,7 +87,6 @@ class SnapHound:
 		self.all_paths = []
 		self.all_paths.extend(self.path_parser.expand_paths(paths))
 		self.all_paths.extend(self.path_parser.expand_paths(priority_paths))
-		self.all_paths.extend(self.path_parser.expand_paths(json.loads(os.getenv("PRIORITY_PATH"))))
 		
 		# Remove excluded paths
 		self.all_paths = [p for p in self.all_paths if not self._is_excluded(p)]
