@@ -6,7 +6,6 @@ import faiss
 import torch
 from .db_processor import DatabaseManager
 import pickle
-from queue import Queue
 from typing import Optional, List, Tuple, Set
 import json
 from dotenv import load_dotenv
@@ -228,9 +227,7 @@ class SnapHound:
 		
 		distances, indices = index.search(text_embedding, min(top_k, len(image_paths)))
 		result = [image_paths[i] for i in indices[0]]
-		print(f"""{{
-			"searched_result":{result}
-		}}""")
+		print(f"""{{"searched_result":{json.dumps(result)}}}""")
 		return result
 
 	def search_with_image(self, query_image_path: str, top_k: int = 5) -> List[str]:
@@ -250,7 +247,5 @@ class SnapHound:
 		
 		distances, indices = index.search(np.array([query_np]), min(top_k, len(image_paths)))
 		result = [image_paths[i] for i in indices[0]]
-		print(f"""{{
-			"searched_result":{result}
-		}}""")
+		print(f"""{{"searched_result":{json.dumps(result)}}}""")
 		return result
