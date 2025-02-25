@@ -1,7 +1,9 @@
 from transformers import AutoProcessor, AutoModel
+import os
 
+PACKAGE_DIR = os.path.dirname(os.path.abspath(__file__))
 model_name = "google/siglip-so400m-patch14-384"
-save_path = "./snaphoundpy/model_files/"
+save_path = "{PACKAGE_DIR}/model_files/"
 
 def __download_models():
 	print(f"Downloading model: {model_name}")
