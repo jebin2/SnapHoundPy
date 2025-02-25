@@ -28,22 +28,26 @@ class PathParser:
 
 	@staticmethod
 	def expand_paths(paths: List[str]) -> Set[str]:
-		"""Expand paths containing wildcards and return only direct folders."""
+		"""Expand paths containing wildcards and return only directories."""
 		expanded_paths = set()
 
 		for path in paths:
-			is_wildcard = path.endswith("/*")
-			path = path.rstrip("/*")  # Remove '/*' to get base path
-			abs_path = os.path.abspath(os.path.expanduser(path))
+			try:
+				is_full_recursive = path.endswith("/**")
+				is_recursive = path.endswith("/*") and not is_full_recursive
+				base_path = path.rstrip("/**").rstrip("/*")
+				abs_path = os.path.abspath(os.path.expanduser(base_path))
 
-			if os.path.isdir(abs_path):
-				expanded_paths.add(abs_path)  # Always include the base path
-				if is_wildcard:  # If wildcard, expand only direct subdirectories
-					expanded_paths.update(
-						os.path.join(abs_path, d) 
-						for d in os.listdir(abs_path) 
-						if os.path.isdir(os.path.join(abs_path, d))
-					)
+				if os.path.isdir(abs_path):
+					expanded_paths.add(abs_path)  # Always include the base path
+
+					if is_recursive or is_full_recursive:
+						for root, dirs, _ in os.walk(abs_path):
+							expanded_paths.update(os.path.join(root, d) for d in dirs)
+							if not is_full_recursive:
+								break  # Stop after the first level if not fully recursive
+			except:
+				pass
 
 		return expanded_paths
 
