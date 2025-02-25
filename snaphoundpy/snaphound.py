@@ -8,7 +8,6 @@ from .db_processor import DatabaseManager
 import pickle
 from queue import Queue
 from typing import Optional, List, Tuple, Set
-import glob
 import json
 from dotenv import load_dotenv
 
@@ -29,15 +28,23 @@ class PathParser:
 
 	@staticmethod
 	def expand_paths(paths: List[str]) -> Set[str]:
-		"""Expand paths containing wildcards and return normalized unique paths."""
+		"""Expand paths containing wildcards and return only direct folders."""
 		expanded_paths = set()
+
 		for path in paths:
-			pattern = PathParser.get_path_pattern(path)
-			if '*' in pattern:
-				expanded = glob.glob(pattern, recursive=True)
-				expanded_paths.update(map(PathParser.normalize_path, expanded))
-			else:
-				expanded_paths.add(PathParser.normalize_path(path))
+			is_wildcard = path.endswith("/*")
+			path = path.rstrip("/*")  # Remove '/*' to get base path
+			abs_path = os.path.abspath(os.path.expanduser(path))
+
+			if os.path.isdir(abs_path):
+				expanded_paths.add(abs_path)  # Always include the base path
+				if is_wildcard:  # If wildcard, expand only direct subdirectories
+					expanded_paths.update(
+						os.path.join(abs_path, d) 
+						for d in os.listdir(abs_path) 
+						if os.path.isdir(os.path.join(abs_path, d))
+					)
+
 		return expanded_paths
 
 class SnapHound:
@@ -212,8 +219,10 @@ class SnapHound:
 
 	def search_with_text(self, query: str, top_k: int = 5) -> Tuple[List[str], List[float]]:
 		"""Search images using text query."""
+		print("sdsdfdsfxcvxc")
 		index, image_paths = self.__build_faiss()
 		if not index:
+			print("Not Indexed yet")
 			return [], []
 			
 		inputs = self.processor(text=[query], return_tensors="pt")
