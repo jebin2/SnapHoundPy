@@ -139,6 +139,13 @@ class SnapHound:
 			except Exception as e:
 				print(f"Error processing path {base_path}: {str(e)}")
 
+		
+		if self.search_value:
+			self.search_with_text(self.search_value)
+
+		if self.search_path:
+			self.search_with_image(self.search_path)
+
 	def _process_image(self, img_path: str):
 		"""Process single image file."""
 		try:
@@ -344,7 +351,7 @@ class SnapHound:
 		
 		for norm_sim, raw_sim, path in similarities:
 			if norm_sim >= normalized_threshold or raw_sim >= normalized_threshold:
+				print(f"""{{"searched_result":{json.dumps(result)}}}""")
 				result.append(path)
-		
-		print(f"""{{"searched_result":{json.dumps(result)}}}""")
+
 		return result
