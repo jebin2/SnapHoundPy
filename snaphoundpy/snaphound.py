@@ -81,12 +81,16 @@ class SnapHound:
 
 	def __process_path(self, paths: List[str] = [], priority_paths: List[str] = [], exclude_paths: List[str] = []):
 		self.path_parser = PathParser()
-		
-		self.exclude_paths = self.path_parser.expand_paths(exclude_paths)
+
+		self.exclude_paths = []
+		if exclude_paths:
+			self.exclude_paths.extend(self.path_parser.expand_paths(exclude_paths))
 
 		self.all_paths = []
-		self.all_paths.extend(self.path_parser.expand_paths(paths))
-		self.all_paths.extend(self.path_parser.expand_paths(priority_paths))
+		if paths:
+			self.all_paths.extend(self.path_parser.expand_paths(paths))
+		if priority_paths:
+			self.all_paths.extend(self.path_parser.expand_paths(priority_paths))
 		
 		# Remove excluded paths
 		self.all_paths = [p for p in self.all_paths if not self._is_excluded(p)]
