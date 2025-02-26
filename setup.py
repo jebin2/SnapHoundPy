@@ -7,7 +7,7 @@ setup(
 	install_requires=[
 		"sentencepiece==0.2.0",
 		"python-dotenv==1.0.1",
-		"transformers==4.50.0.dev0",
+		"transformers @ git+https://github.com/huggingface/transformers@v4.49.0-SigLIP-2",
 		"torch==2.6.0",
 		"pillow==11.1.0",
 		"numpy==2.2.3",
