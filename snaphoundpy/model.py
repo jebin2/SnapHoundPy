@@ -2,7 +2,8 @@ from transformers import AutoProcessor, AutoModel
 import os
 
 PACKAGE_DIR = os.path.dirname(os.path.abspath(__file__))
-model_name = "google/siglip-so400m-patch14-384"
+# model_name = "google/siglip-so400m-patch14-384"
+model_name = "google/siglip2-base-patch16-224"
 save_path = f"{PACKAGE_DIR}/model_files/"
 
 def __download_models():
