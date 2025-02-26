@@ -264,7 +264,7 @@ class SnapHound:
 		threshold: float = 0.3  # Higher threshold for better matches
 	) -> List[str]:
 		"""Generalized search function for text or image queries."""
-		
+		print("Starting Search...")
 		# Always search against the full database
 		index, full_image_paths = self.__build_faiss(use_cosine, image_paths)
 		
@@ -283,7 +283,7 @@ class SnapHound:
 		# Use a larger k to find more potential matches
 		search_k = min(20, len(full_image_paths))
 		distances, indices = index.search(query_embedding_np, search_k)
-		
+		print("Search Completed")
 		return self.__process_result(distances, indices, full_image_paths, threshold)
 
 	def __process_result(self, distances, indices, image_paths, threshold):
