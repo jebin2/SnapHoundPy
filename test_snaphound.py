@@ -5,15 +5,15 @@ import os
 from snaphoundpy import SnapHound
 
 # Handle optional paths argument
-paths = json.loads(sys.argv[1])
+input_data = json.loads(sys.argv[1])
 
-print("Search Value:", paths.get("search_data", ""))
-print("Priority Paths:", paths.get("priority_paths", []))
-print("Paths:", paths.get("path", []))
-print("Index:", paths.get("index", False))
+print("Search Value:", input_data.get("search_data", ""))
+print("Priority Paths:", input_data.get("priority_paths", []))
+print("Paths:", input_data.get("path", []))
+print("Index:", input_data.get("index", False))
 
 # Initialize SnapHound
-snaphoundpy = SnapHound(paths=paths.get("path", []), priority_paths=paths.get("priority_paths", []))
+snaphoundpy = SnapHound(paths=input_data.get("path", []), priority_paths=input_data.get("priority_paths", []))
 print("SnapHound Started.")
 # Global variable to keep track of the indexing thread
 index_thread = None
@@ -22,9 +22,7 @@ index_lock = threading.Lock()
 # Function to index images in a separate thread
 def index_images_thread():
 	global index_thread
-	print("Starting image indexing...")
 	snaphoundpy.index_images()
-	print("Indexing completed.")
 	index_thread = None  # Reset thread reference when done
 
 # Function to start indexing if not already running
@@ -44,7 +42,18 @@ def search(search_data):
 		print("Search result:", result)
 	return True
 
+def main(data):
+	input_data["search_data"] = data.get("search_data", "")
+	input_data["index"] = data.get("index", False)
+
+	if input_data["index"]:
+		start_indexing()
+
+	if input_data["search_data"]:
+		search(input_data["search_data"])
+
 def server_mode():
+	main(input_data)
 	while True:
 		try:
 			user_input = sys.stdin.readline().strip()
@@ -52,14 +61,7 @@ def server_mode():
 				continue
 
 			args = json.loads(user_input)
-			paths["search_data"] = args.get("search_data", "")
-			paths["index"] = args.get("index", False)
-
-			if paths["index"]:
-				start_indexing()
-
-			if paths["search_data"]:
-				search(paths["search_data"])
+			main(args)
 
 			sys.stdout.flush()
 

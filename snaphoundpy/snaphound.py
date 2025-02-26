@@ -109,7 +109,7 @@ class SnapHound:
 	def index_images(self):
 		"""Index images in a background thread."""
 		indexed_files = set()  # Track already indexed files to avoid duplicates
-		
+		print("Starting Index process...")
 		for base_path in self.all_paths:
 			try:
 				# Handle directory
@@ -132,6 +132,7 @@ class SnapHound:
 
 			except Exception as e:
 				print(f"Error processing path {base_path}: {str(e)}")
+		print("Index Completed")
 
 	def _process_image(self, img_path: str):
 		"""Process single image file."""
