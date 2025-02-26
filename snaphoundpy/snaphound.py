@@ -63,7 +63,7 @@ class SnapHound:
 		}}
 	}}'''
 
-	def __init__(self, paths: List[str] = [], priority_paths: List[str] = [], exclude_paths: List[str] = [], search_value: str = None, search_path: str = None, index=True):
+	def __init__(self, paths: List[str] = [], priority_paths: List[str] = [], exclude_paths: List[str] = []):
 		load_dotenv()
 
 		self.__process_path(paths, priority_paths, exclude_paths)
@@ -71,12 +71,6 @@ class SnapHound:
 		# Database connection
 		self.conn = DatabaseManager(json.loads(self.FULL_DB_INFO))
 		self.model, self.processor = load_model()
-		self.search_value = search_value
-		self.search_path = search_path
-		self.all_searched_once = False
-		# Start indexing
-		if index:
-			self.__index_images()
 
 	def _is_excluded(self, path: str) -> bool:
 		"""Check if a path should be excluded based on exclude_paths."""
@@ -112,7 +106,7 @@ class SnapHound:
 
 		print(f"Selected paths: {self.all_paths}")
 
-	def __index_images(self):
+	def index_images(self):
 		"""Index images in a background thread."""
 		indexed_files = set()  # Track already indexed files to avoid duplicates
 		
@@ -139,13 +133,6 @@ class SnapHound:
 			except Exception as e:
 				print(f"Error processing path {base_path}: {str(e)}")
 
-		
-		if self.search_value:
-			self.search_with_text(self.search_value)
-
-		if self.search_path:
-			self.search_with_image(self.search_path)
-
 	def _process_image(self, img_path: str):
 		"""Process single image file."""
 		try:
@@ -153,19 +140,9 @@ class SnapHound:
 				return
 
 			if self.__check_if_indexed(img_path):
-				if not self.all_searched_once:
-					if self.search_value:
-						print(f"Searching with text: {self.search_value}")
-						self.search_with_text(self.search_value)
-
-					if self.search_path:
-						print(f"Searching with images for: {self.search_path}")
-						self.search_with_image(self.search_path)
-
-					self.all_searched_once = True
 				return
 
-			print(f"processing... {img_path}")
+			print(f"Indexing file :: {img_path}")
 			image = Image.open(img_path).convert("RGB")
 			# Convert image to embedding
 			inputs = self.processor(images=image, return_tensors="pt")
@@ -179,16 +156,7 @@ class SnapHound:
 			# Store in DB and notify search functions
 			self.__store_embedding(img_path, embedding_np)
 
-			print(f"processed {img_path}")
-
-			# Perform search if required
-			if self.search_value:
-				print(f"Searching with text: {self.search_value}")
-				self.search_with_text(self.search_value, [embedding_np], [img_path])
-
-			if self.search_path:
-				print(f"Searching with images for: {self.search_path}")
-				self.search_with_image(self.search_path, [embedding_np], [img_path])
+			print(f"Indexed file :: {img_path}")
 
 		except Exception as e:
 			print(f"Critical error with {img_path} [{type(e).__name__}]: {str(e)}")
@@ -217,7 +185,6 @@ class SnapHound:
 		if image_paths_filter:
 			placeholders = ','.join('?' for _ in image_paths_filter)  # Create the correct number of placeholders
 			query = f"SELECT image_path, embedding FROM {self.conn.table_name} WHERE image_path IN ({placeholders})"
-			print(query)
 			data = self.conn.execute(query, image_paths_filter)
 		else:
 			data = self.conn.execute(f"SELECT image_path, embedding FROM {self.conn.table_name}")
@@ -340,7 +307,7 @@ class SnapHound:
 			normalized_similarity = (raw_similarity - min_dist) / range_dist if range_dist > 0 else 0
 			
 			similarities.append((normalized_similarity, raw_similarity, image_paths[idx]))
-			print(f"Normalized: {normalized_similarity:.4f}, Raw: {raw_similarity:.4f} :: {image_paths[idx]}")
+			# print(f"Normalized: {normalized_similarity:.4f}, Raw: {raw_similarity:.4f} :: {image_paths[idx]}")
 		
 		# Sort by normalized similarity (highest first)
 		similarities.sort(key=lambda x: x[0], reverse=True)
