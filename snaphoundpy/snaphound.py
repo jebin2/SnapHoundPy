@@ -332,51 +332,32 @@ class SnapHound:
 
 		# Perform FAISS search - search against all indexed images
 		# Use a larger k to find more potential matches
-		search_k = min(20, len(full_image_paths))
+		search_k = len(full_image_paths)
+		top_k = search_k
 		distances, indices = index.search(query_embedding_np, search_k)
 		print("Search Completed")
-		return self.__process_result(distances, indices, full_image_paths, threshold)
+		return self.__process_result(distances, indices, full_image_paths, top_k)
 
-	def __process_result(self, distances, indices, image_paths, threshold):
-		"""Processes FAISS search results based on similarity threshold."""
+	def __process_result(self, distances, indices, image_paths, top_k=5):
+		"""Processes FAISS search results to return top K matches."""
 		result = []
-		similarities = []
-
-		# Calculate global stats for normalization if needed
-		max_dist = np.max(distances[0]) if distances[0].size > 0 else 1.0
-		min_dist = np.min(distances[0]) if distances[0].size > 0 else 0.0
-		range_dist = max_dist - min_dist
-
+		matches = []
+		
+		# Collect valid results with their similarity scores
 		for i, idx in enumerate(indices[0]):
 			if idx >= len(image_paths):
 				continue
-
-			raw_similarity = distances[0][i]
-
-			# For SigLIP model specifically:
-			# Normalize to a more interpretable scale (0-1)
-			# This helps set a consistent threshold
-			normalized_similarity = (
-				(raw_similarity - min_dist) / range_dist if range_dist > 0 else 0
-			)
-
-			similarities.append(
-				(normalized_similarity, raw_similarity, image_paths[idx])
-			)
-			# print(f"Normalized: {normalized_similarity:.4f}, Raw: {raw_similarity:.4f} :: {image_paths[idx]}")
-
-		# Sort by normalized similarity (highest first)
-		similarities.sort(key=lambda x: x[0], reverse=True)
-
-		# Apply threshold to normalized similarity
-		# Adjust this threshold based on your specific needs
-		normalized_threshold = (
-			0.05  # Only return results in the top half of similarity range
-		)
-
-		for norm_sim, raw_sim, path in similarities:
-			if norm_sim >= normalized_threshold or raw_sim >= normalized_threshold:
-				print(f"""{{"searched_result":{json.dumps(result)}}}""")
-				result.append(path)
-
+				
+			similarity = distances[0][i]
+			matches.append((similarity, image_paths[idx]))
+		
+		# Sort by similarity (highest first)
+		matches.sort(key=lambda x: x[0], reverse=True)
+		
+		# Take only the top K
+		for similarity, path in matches[:top_k]:
+			result.append(path)
+			print(f"Match: {similarity:.4f} :: {path}")
+		
+		print(f"""{{"searched_result":{json.dumps(result)}}}""")
 		return result
